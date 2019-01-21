@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Jan 17 12:44:54 2019
+Created on Mon Jan 21 11:57:49 2019
 
 @author: Aidin
 """
@@ -14,7 +14,19 @@ EPSILON = 1e-5
 GAMMA = 0.9
 ACTIONS = {'U','D','L','R'}
 
-
+def randomAction(a):
+    
+    
+    p = np.random.random()
+    
+    if p < 0.5:
+        return a
+    else:
+        temp = list(ACTIONS)
+        temp.remove(a)
+        return np.random.choice(temp)
+    
+    
 def playGame(grid,policy):
     startStates = list(grid.actions.keys())
     startIndex = np.random.choice((len(startStates)))
@@ -24,6 +36,7 @@ def playGame(grid,policy):
     statesRewards = [(s,0)]
     while not grid.gameOver():
         a = policy[s]
+        a = randomAction(a)
         r = grid.move(a)
         s = grid.currentState()
         statesRewards.append((s,r))
@@ -39,7 +52,6 @@ def playGame(grid,policy):
     statesReturns.reverse()
     return statesReturns
 
-
 if __name__ == '__main__':
     grid = standardGrid()
     
@@ -53,10 +65,10 @@ if __name__ == '__main__':
             (0,0): "R",
             (0,1): "R",
             (0,2): "R",
-            (1,2): "R",
-            (2,1): "R",
-            (2,2): "R",
-            (2,3): "U",
+            (1,2): "U",
+            (2,1): "L",
+            (2,2): "U",
+            (2,3): "L",
     }
    
     V = {}
@@ -69,7 +81,7 @@ if __name__ == '__main__':
             V[s] = 0
     
     
-    for t in range (100):
+    for t in range (5000):
         statesReturns = playGame(grid,policy)
         visitedStates = set()
         
