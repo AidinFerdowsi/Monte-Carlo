@@ -6,7 +6,7 @@ Created on Mon Jan 21 15:25:48 2019
 """
 import numpy as np
 from gridWorld import standardGrid
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 from iterativePolicyEvaluation import printValues, printPolicy
 
 
@@ -104,8 +104,8 @@ if __name__ == '__main__':
         
         for s in policy.keys():
             policy[s] = argMax(Q[s])[0]
-#    plt.plot(deltas)
-#    plt.show()
+    plt.plot(deltas)
+    plt.show()
     
     print("Final Policy")
     printPolicy(policy,grid)
