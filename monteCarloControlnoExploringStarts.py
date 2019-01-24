@@ -1,67 +1,65 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jan 21 15:25:48 2019
+Created on Thu Jan 24 15:54:43 2019
 
 @author: Aidin
 """
 import numpy as np
-from gridWorld import standardGrid
 import matplotlib.pyplot as plt
+from gridWorld import standardGrid, negativeGrid
 from iterativePolicyEvaluation import printValues, printPolicy
+from monteCarloControl import argMax
 
-
-
-EPSILON = 1e-5
 GAMMA = 0.9
 ACTIONS = {'U','D','L','R'}
 
+def randomAction(a, grid, eps = 0.4):
+    
+    
+    p = np.random.random()
+    
+    if p < (1 - eps):
+        return a
+    else:
+#        return np.random.choice(list(ACTIONS))
+        return np.random.choice(list(grid.actions[grid.currentState()]))
+    
+    
+
 def playGame(grid,policy):
-    startStates = list(grid.actions.keys())
-    startIndex = np.random.choice((len(startStates)))
-    grid.setState(startStates[startIndex])
+    s = (2,0)
+    grid.setState(s)
+    a = randomAction(policy[s],grid)
     
-    s = grid.currentState()
-    a = np.random.choice(list(ACTIONS))
     
-    statesActionsRewards = [(s,a,0)]
+    statesActionRewards = [(s,a,0)]
     while True:
-        oldS = grid.currentState()
         r = grid.move(a)
         s = grid.currentState()
-        if oldS == s:
-            statesActionsRewards.append((s,None,-100))
-            break
-        elif grid.gameOver():
-            statesActionsRewards.append((s,None,r))
+        
+        if grid.gameOver():
+            statesActionRewards.append((s,None,r))
             break
         else:
-            a = policy[s]
-            statesActionsRewards.append((s,a,r))
-    
+            a = randomAction(policy[s],grid)
+            statesActionRewards.append((s,a,r))
     G = 0
-    statesReturns = []
+    statesActionReturns = []
     firstVisit = True
-    for s, a, r in reversed(statesActionsRewards):
+    for s, a, r in reversed(statesActionRewards):
         if firstVisit:
             firstVisit = False
         else:
-            statesReturns.append((s,a, G))
-        G = r+ GAMMA*G
-    statesReturns.reverse()
-    return statesReturns
+            statesActionReturns.append((s,a, G))
+        G = r + GAMMA*G
+    statesActionReturns.reverse()
+    return statesActionReturns
 
-def argMax(dic):
-    maxKey = None
-    maxVal = float('-inf')
-    
-    for k, v in dic.items():
-        if v> maxVal:
-            maxVal = v
-            maxKey = k
-    return maxKey, maxVal
 
 if __name__ == '__main__':
-    grid = standardGrid()
+#    grid = standardGrid()
+    
+    grid = negativeGrid(stepCost = - 0.1)
     
     
     print ("Rewards:")
@@ -69,7 +67,7 @@ if __name__ == '__main__':
     
     policy = {}    
     for s in grid.actions.keys():
-        policy[s] = np.random.choice(list(ACTIONS))
+        policy[s] = np.random.choice(list(grid.actions[s]))
     
     Q = {}
     returns = {}
@@ -79,23 +77,26 @@ if __name__ == '__main__':
     for s in states:
         if s in grid.actions:
             Q[s] = {}
-            for a in ACTIONS:
+            for a in list(ACTIONS):
                 Q[s][a] = 0
                 returns[(s,a)] = []
         else:
             pass
         
     deltas = []
+    
+    
     for t in range(10000):
-        print(t)
+        if t%100 == 0:
+            print(t)
         
         biggestChange = 0
         statesActionReturns = playGame(grid,policy)
         seenStateActions = set()
         for s, a, G in statesActionReturns:
-            
+#            print (s)
             stateAction = (s,a)
-            if s == (2,3):
+            if s == (2,2):
                 print (a)
             if stateAction not in seenStateActions:
                 oldQ = Q[s][a]
@@ -107,6 +108,8 @@ if __name__ == '__main__':
         
         for s in policy.keys():
             policy[s] = argMax(Q[s])[0]
+    
+    plt.figure(figsize=(10,4))        
     plt.plot(deltas)
     plt.show()
     
@@ -120,4 +123,3 @@ if __name__ == '__main__':
     
     print("Final Values")
     printValues(V,grid)
-    
